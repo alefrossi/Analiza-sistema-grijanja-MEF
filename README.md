@@ -94,4 +94,8 @@ Odsjek Energetika
 Akademska upotreba. Izvorni mjerni podaci su vlasništvo institucije
 koja je obezbijedila sistem energetskog menadžmenta.
 
-slike (docs/images/slika 12.png)
+<p align="center">
+  <img src="docs/images/dijagram1.png" width="32%">
+  <img src="docs/images/dijagram2.png" width="32%">
+  <img src="docs/images/regresijska_analiza.png" width="32%">
+</p>
