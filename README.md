@@ -1,120 +1,95 @@
-# MEF Sistem Grijanja — Web Aplikacija
+# Analiza sistema radijatorskog grijanja
 
-**Autor:** Belma Hodžić  
-**Predmet:** Energijski menadžment — projektni zadatak  
-**Institucija:** Mašinski fakultet Sarajevo  
-**Period analize:** 15.10.2016. – 15.12.2016.
+Web aplikacija za obradu i vizualizaciju podataka sistema energetskog menadžmenta
+instaliranog na zgradi s radijatorskim grijanjem. Aplikacija obrađuje satna
+mjerenja temperaturnih i protočnih veličina te na osnovu njih izvodi
+termotehničku i statističku analizu rada sistema.
 
----
+## Funkcionalnosti
 
-## Opis
+Aplikacija omogućava:
 
-Interaktivna web aplikacija za analizu sistema grijanja MEF-a sa dvije stranice:
+- Učitavanje i konsolidaciju satnih mjerenja iz izvornih tabelarnih zapisa
+  (temperatura razvoda, temperatura povrata, protok cirkulacione pumpe,
+  vanjska temperatura, temperature karakterističnih prostorija).
+- Agregaciju podataka na satnoj i dnevnoj rezoluciji.
+- Filtriranje mjerenja prema fizikalno opravdanim kriterijima
+  (radni dani, aktivan sistem, stacionarna stanja, uklanjanje tranzijenata i
+  outliera po IQR pravilu).
+- Interaktivni mjesečni pregled sa višestrukim selektorom veličina koje se
+  istovremeno prikazuju na dijagramu.
+- Detekciju i vizualno označavanje perioda rada i mirovanja sistema
+  (ON/OFF overlay).
+- Prikaz razlike temperature razvoda i povrata (ΔT_rp) kao dijagnostičkog
+  pokazatelja hidrauličkog stanja sistema.
+- Sumarnu statistiku za izabrani mjesec: raspon vanjske temperature,
+  prosječni protok, prosječne temperature razvoda i povrata, srednje vrijeme
+  rada sistema, raspodjela radnih sati u hladnim i toplim danima.
+- Konstrukciju i prikaz teorijske krive grijanja prema jednačini s eksponentom
+  radijatora n = 1,3 i poređenje sa mjerenim stacionarnim operativnim tačkama.
+- Prikaz četiri linearne regresije potrošnje energije (satne i dnevne,
+  u funkciji vanjske temperature odnosno temperaturne razlike) sa
+  pripadajućim koeficijentima determinacije.
 
-- **`/analiza`** — interaktivni dijagrami s filterima po mjesecu, rezoluciji i veličinama
-- **`/regresije`** — četiri regresijske krive s tačkama raspršenja i formulama
+## Teorijska osnova
 
----
+Analiza se oslanja na kvazi-stacionarni model gubitaka prostora prema
+okolini, u kojem je karakteristika objekta K definisana kao:
 
-## Pokretanje
+    Φ_ok = K · (t_u − t_ok)
 
-### Korak 1 — Konverzija Excel → CSV
+Teorijska kriva grijanja za sistem s konstantnim masenim protokom
+izvedena je iz istovremenih bilansa po prostoru, kotlu i radijatoru:
 
-> Potrebno jednom prije pokretanja aplikacije.
+    t_R = t_u + Δt_m^N · X^(1/n) + (ΔT_rp^N / 2) · X
+    t_P = t_u + Δt_m^N · X^(1/n) − (ΔT_rp^N / 2) · X
 
-```bash
-cd mef-grijanje-app
-python scripts/convert_excel_to_csv.py
-```
+gdje je X = (t_u − t_ok) / (t_u^N − t_ok^N) bezdimenzijska temperaturna razlika,
+a n = 1,3 eksponent za standardne radijatore.
 
-Skripta čita `../Projektni-claude-prva-verzija KRAJNJA.xlsx` i generiše:
-- `public/data/satna.csv` — 1487 satnih mjerenja
-- `public/data/dnevna.csv` — 62 dnevne agregacije
-- `public/data/stacionarna.csv` — 113 stacionarnih tačaka
+Linearna regresija dnevne potrošnje u funkciji vanjske temperature
+predstavlja energetski potpis zgrade; nagib regresijske prave direktno je
+proporcionalan karakteristici objekta K.
 
-### Korak 2 — Instalacija zavisnosti
+## Tehnologije
 
-```bash
-npm install
-```
-
-### Korak 3 — Pokretanje u razvoju
-
-```bash
-npm run dev
-```
-
-Otvorite `http://localhost:5173` u pregledaču.
-
-### Build za produkciju
-
-```bash
-npm run build
-npm run preview
-```
-
----
-
-## Tehnički stack
-
-| Tehnologija | Verzija | Uloga |
-|---|---|---|
-| React | 18 | UI framework |
-| Vite | 8 | Build tool |
-| Recharts | 2 | Dijagrami |
-| React Router | 6 | Routing |
-| PapaParse | 5 | CSV parsing |
-| Tailwind CSS | 3 | Stilizovanje |
-
----
+- React (Vite) za frontend
+- Recharts za vizualizaciju
+- Tailwind CSS za styling
+- React Router za navigaciju
+- PapaParse za obradu CSV ulaza
+- Python (pandas) za pretprocesiranje izvornih mjerenja
 
 ## Struktura projekta
 
-```
-mef-grijanje-app/
-├── public/
-│   └── data/
-│       ├── satna.csv          ← satna mjerenja (1487 redova)
-│       ├── dnevna.csv         ← dnevne agregacije (62 dana)
-│       └── stacionarna.csv   ← stacionarna stanja (113 tačaka)
-├── scripts/
-│   └── convert_excel_to_csv.py
-├── src/
-│   ├── App.jsx
-│   ├── main.jsx
-│   ├── pages/
-│   │   ├── Analiza.jsx
-│   │   └── Regresije.jsx
-│   ├── components/
-│   │   ├── Header.jsx
-│   │   ├── NavBar.jsx
-│   │   ├── MonthSelector.jsx
-│   │   ├── ResolutionSelector.jsx
-│   │   ├── VariableMultiSelect.jsx
-│   │   ├── InteractiveChart.jsx
-│   │   ├── InfoPanel.jsx
-│   │   ├── StatCard.jsx
-│   │   └── RegressionCard.jsx
-│   ├── hooks/
-│   │   ├── useData.js
-│   │   └── useStatistics.js
-│   ├── utils/
-│   │   ├── constants.js
-│   │   ├── dataFiltering.js
-│   │   ├── statistics.js
-│   │   └── workHours.js
-│   └── styles/
-│       └── index.css
-└── README.md
-```
+    .
+    ├── public/data/           CSV ulazi (satne, dnevne i stacionarne vrijednosti)
+    ├── scripts/               Python skripte za konverziju izvornih podataka
+    ├── src/
+    │   ├── pages/             Analiza i Regresije
+    │   ├── components/        UI komponente (selektori, grafici, info panel)
+    │   ├── hooks/             useData, useStatistics
+    │   └── utils/             Filtriranje, agregacija, statistika, konstante
+    └── docs/                  Tehnička dokumentacija
 
----
+## Pokretanje
 
-## Regresijske formule
+    git clone https://github.com/<username>/<repo>.git
+    cd <repo>
 
-| # | Formula | R² | N |
-|---|---|---|---|
-| 1 | ΔE = −0,00806·T_ok + 0,2120 [MWh/h] | 0,711 | ~335 |
-| 2 | ΔE = 0,0110·ΔT + 0,0149 [MWh/h] | 0,727 | ~91 |
-| 3 ⭐ | **ΔE_dnevna = −0,0795·T_ok + 2,094 [MWh/dan]** | **0,900** | 44 |
-| 4 | ΔE_dnevna = −0,0890·ΔT + 0,3394 [MWh/dan] | 0,812 | 44 |
+    python scripts/convert_excel_to_csv.py
+    npm install
+    npm run dev
+
+Development server pokreće se na http://localhost:5173.
+
+## Autor
+
+Belma Hodžić
+Mašinski fakultet, Univerzitet u Sarajevu
+Odsjek Energetika
+
+## Licenca
+
+Akademska upotreba. Izvorni mjerni podaci su vlasništvo institucije
+koja je obezbijedila sistem energetskog menadžmenta.
